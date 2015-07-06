@@ -79,6 +79,9 @@ public:
         
         /* If this isn't true, the lock wasn't actually held by the caller. */
         PLCF_ASSERT(released);
+
+        /* Quiet unused variable warning for release builds */
+        (void) released;
     }
 
 private:
