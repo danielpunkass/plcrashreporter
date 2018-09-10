@@ -447,27 +447,12 @@ plcrash_error_t plcrash_log_writer_init (plcrash_log_writer_t *writer,
     writer->system_info.version = strdup([[[UIDevice currentDevice] systemVersion] UTF8String]);
 #elif TARGET_OS_MAC
     /* Mac OS X */
-    {
-        SInt32 major, minor, bugfix;
+	{
+		NSOperatingSystemVersion thisVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
 
-        /* Fetch the major, minor, and bugfix versions.
-         * Fetching the OS version should not fail. */
-        if (Gestalt(gestaltSystemVersionMajor, &major) != noErr) {
-            PLCF_DEBUG("Could not retrieve system major version with Gestalt");
-            return PLCRASH_EINTERNAL;
-        }
-        if (Gestalt(gestaltSystemVersionMinor, &minor) != noErr) {
-            PLCF_DEBUG("Could not retrieve system minor version with Gestalt");
-            return PLCRASH_EINTERNAL;
-        }
-        if (Gestalt(gestaltSystemVersionBugFix, &bugfix) != noErr) {
-            PLCF_DEBUG("Could not retrieve system bugfix version with Gestalt");
-            return PLCRASH_EINTERNAL;
-        }
-
-        /* Compose the string */
-        asprintf(&writer->system_info.version, "%" PRId32 ".%" PRId32 ".%" PRId32, (int32_t)major, (int32_t)minor, (int32_t)bugfix);
-    }
+		/* Compose the string */
+		asprintf(&writer->system_info.version, "%" PRId32 ".%" PRId32 ".%" PRId32, (int32_t) thisVersion.majorVersion, (int32_t) thisVersion.minorVersion, (int32_t) thisVersion.patchVersion);
+	}
 #else
 #error Unsupported Platform
 #endif
