@@ -27,7 +27,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "PLCrashFeatureConfig.h"
+#import <CrashReporter/PLCrashFeatureConfig.h>
 
 /**
  * @ingroup enums

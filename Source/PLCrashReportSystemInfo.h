@@ -27,7 +27,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#include "PLCrashMacros.h"
+#include <CrashReporter/PLCrashMacros.h>
 @class PLCrashReportProcessorInfo;
 
 /**

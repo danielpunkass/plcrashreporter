@@ -27,7 +27,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "PLCrashReportSymbolInfo.h"
+#import <CrashReporter/PLCrashReportSymbolInfo.h>
 
 @interface PLCrashReportStackFrameInfo : NSObject {
 @private

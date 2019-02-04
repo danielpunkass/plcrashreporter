@@ -32,7 +32,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "PLCrashReportFormatter.h"
+#import <CrashReporter/PLCrashReportFormatter.h>
 
 /**
  * Supported text output formats.

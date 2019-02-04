@@ -27,7 +27,7 @@
  */
 
 #import <Foundation/Foundation.h>
-#import "PLCrashReportThreadInfo.h"
+#import <CrashReporter/PLCrashReportThreadInfo.h>
 
 
 @interface PLCrashReportExceptionInfo : NSObject {

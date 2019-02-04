@@ -28,7 +28,7 @@
 
 #import <Foundation/Foundation.h>
 
-#import "PLCrashReport.h"
+#import <CrashReporter/PLCrashReport.h>
 
 /**
  * A crash report formatter accepts a PLCrashReport instance, formats it according to implementation-specified rules,

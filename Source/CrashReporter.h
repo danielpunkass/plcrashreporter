@@ -34,11 +34,11 @@
 
 // This must be included before any other PLCrashReporter includes, as
 // it redefines symbol names
-#import "PLCrashNamespace.h"
+#import <CrashReporter/PLCrashNamespace.h>
 
-#import "PLCrashReporter.h"
-#import "PLCrashReport.h"
-#import "PLCrashReportTextFormatter.h"
+#import <CrashReporter/PLCrashReporter.h>
+#import <CrashReporter/PLCrashReport.h>
+#import <CrashReporter/PLCrashReportTextFormatter.h>
 
 /**
  * @defgroup functions Crash Reporter Functions Reference
@@ -106,9 +106,9 @@ typedef enum {
 
 
 /* Library Imports */
-#import "PLCrashReporter.h"
-#import "PLCrashReport.h"
-#import "PLCrashReportTextFormatter.h"
+#import <CrashReporter/PLCrashReporter.h>
+#import <CrashReporter/PLCrashReport.h>
+#import <CrashReporter/PLCrashReportTextFormatter.h>
 
 /**
  * @mainpage Plausible Crash Reporter

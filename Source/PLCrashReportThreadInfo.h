@@ -28,8 +28,8 @@
 
 #import <Foundation/Foundation.h>
 
-#import "PLCrashReportStackFrameInfo.h"
-#import "PLCrashReportRegisterInfo.h"
+#import <CrashReporter/PLCrashReportStackFrameInfo.h>
+#import <CrashReporter/PLCrashReportRegisterInfo.h>
 
 @interface PLCrashReportThreadInfo : NSObject {
 @private
