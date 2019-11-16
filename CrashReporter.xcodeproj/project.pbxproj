@@ -4035,6 +4035,7 @@
 					"-framework",
 					AppKit,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = coop.plausible.CrashReporter;
 				PRODUCT_NAME = CrashReporter;
 				SKIP_INSTALL = YES;
 			};
@@ -4059,6 +4060,7 @@
 					"-framework",
 					AppKit,
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = coop.plausible.CrashReporter;
 				PRODUCT_NAME = CrashReporter;
 				SKIP_INSTALL = YES;
 				ZERO_LINK = NO;
@@ -4567,6 +4569,7 @@
 					"$(inherited)",
 					"-DPLCF_MIN_MACOSX_SDK=$(PL_MIN_MACOSX_SDK)",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = coop.plausible.CrashReporter;
 				PRODUCT_NAME = CrashReporter;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -4593,6 +4596,7 @@
 					"$(inherited)",
 					"-DPLCF_MIN_MACOSX_SDK=$(PL_MIN_MACOSX_SDK)",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = coop.plausible.CrashReporter;
 				PRODUCT_NAME = CrashReporter;
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
