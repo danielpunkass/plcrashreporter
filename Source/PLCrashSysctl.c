@@ -95,7 +95,6 @@ static void *plcrash_sysctl_malloc (const char *name, size_t *length) {
  * Wrap sysctl() and fetch a C string, automatically allocating a sufficiently large buffer for the returned data.
  *
  * @param name The sysctl MIB name.
- * @param length On success, will be populated with the length of the result. If NULL, length will not be supplied.
  *
  * @return Returns a malloc-allocated NULL-terminated C string containing the sysctl result on success. On failure,
  * NULL is returned and the global variable errno is set to indicate the error. The caller is responsible for
