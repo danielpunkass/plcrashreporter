@@ -102,8 +102,11 @@ plcrash_error_t plcrash_async_macho_init (plcrash_async_macho_t *image, plcrash_
             // Enable byte swapping
             image->byteorder = &plcrash_async_byteorder_swapped;
             // Fall-through
+// New Attribute in clang 12.0? (Came with Xcode 12)
+#if __has_attribute(fallthrough)
             __attribute__((fallthrough));
-            
+#endif
+
         case MH_MAGIC:
             image->m64 = false;
             break;            
@@ -112,7 +115,10 @@ plcrash_error_t plcrash_async_macho_init (plcrash_async_macho_t *image, plcrash_
             // Enable byte swapping
             image->byteorder = &plcrash_async_byteorder_swapped;
             // Fall-through
+// New Attribute in clang 12.0? (Came with Xcode 12)
+#if __has_attribute(always_inline)
             __attribute__((fallthrough));
+#endif
 
         case MH_MAGIC_64:
             image->m64 = true;
