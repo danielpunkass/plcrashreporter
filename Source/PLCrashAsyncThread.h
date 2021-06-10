@@ -66,34 +66,15 @@ typedef _STRUCT_UCONTEXT pl_ucontext_t;
 #if defined(__arm__) || defined(__arm64__)
     
 #include <mach/arm/thread_state.h>
-    
-/**
- * Host architecture mcontext_t-compatible type.
- */
-#ifdef __LP64__
-// XXX_ARM64 rdar://14970271 -- In the Xcode 5 GM SDK, _STRUCT_MCONTEXT is not correctly
-// defined as _STRUCT_MCONTEXT64 when building for arm64; this requires defining
-// 32-bit and 64-bit pl_*context types.
-typedef _STRUCT_UCONTEXT pl_ucontext_t;
-typedef _STRUCT_MCONTEXT64 pl_mcontext_t;
-#else
-typedef _STRUCT_UCONTEXT pl_ucontext_t;
+
+/** Host architecture mcontext_t type. */
 typedef _STRUCT_MCONTEXT pl_mcontext_t;
-#endif
+
+/** Host architecture ucontext_t type. */
+typedef _STRUCT_UCONTEXT pl_ucontext_t;
 
 /** Defined if ARM thread states are supported by the PLCrashReporter thread state API. */
 #define PLCRASH_ASYNC_THREAD_ARM_SUPPORT 1
-
-#if defined(__arm64__) || __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_7_0
-    /** ARM unified thread state support was not available until iOS 7.0, and iOS 7.0 is the minimum
-     * release that will run on an ARM64 device. */
-    #define PLCRASH_ASYNC_THREAD_ARM_UNIFIED_SUPPORT 1
-#endif
-    
-/* Note that we can remove the non-unified thread state support once we target iOS >= 7.0 */
-#if !defined(__arm64__) && __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_7_0
-#warning Support for non-unified thread state should be removed if targeting only iOS >= 7.0.
-#endif
 
 #endif
 
@@ -272,7 +253,7 @@ bool plcrash_async_thread_state_map_reg_to_dwarf (plcrash_async_thread_state_t *
  */
 bool plcrash_async_thread_state_map_dwarf_to_reg (const plcrash_async_thread_state_t *thread_state, uint64_t dwarf_reg, plcrash_regnum_t *regnum);
 
-/**
+/*
  * @}
  */
     

@@ -29,26 +29,18 @@
 #ifndef PLCRASH_ASYNC_OBJC_SECTION_H
 #define PLCRASH_ASYNC_OBJC_SECTION_H
 
-#include "PLCrashAsyncMachOImage.h"
-#include "PLCrashAsyncMachOString.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "PLCrashAsyncMachOImage.h"
+#include "PLCrashAsyncMachOString.h"
     
 /**
  * @internal
  * @ingroup plcrash_async_image_objc
  * @{
  */
-
-/**
- * @internal
- * Flag set for non-ptr ISAs. This flag is not ABI stable, and may change.
- */
-#define PLCRASH_ASYNC_OBJC_ISA_NONPTR_FLAG 0x1
-
-extern const uint64_t PLCRASH_ASYNC_OBJC_ISA_NONPTR_CLASS_MASK;
 
 /**
  * @internal
@@ -76,7 +68,13 @@ typedef struct plcrash_async_objc_cache {
     
     /** A memory object for the __objc_const section. */
     plcrash_async_mobject_t objcConstMobj;
-    
+
+    /** Whether the objcConstAx object is initialized. */
+    bool objcConstAxMobjInitialized;
+
+    /** A memory object for the __objc_const_ax section. */
+    plcrash_async_mobject_t objcConstAxMobj;
+
     /** Whether the class memory object is initialized. */
     bool classMobjInitialized;
     
@@ -94,6 +92,12 @@ typedef struct plcrash_async_objc_cache {
     
     /** A memory object for the __objc_data section. */
     plcrash_async_mobject_t objcDataMobj;
+
+    /** Whether the data object is initialized. */
+    bool dataMobjInitialized;
+
+    /** A memory object for the __data section. */
+    plcrash_async_mobject_t dataMobj;
     
     /** The size of the class cache, in entries. */
     size_t classCacheSize;
@@ -107,8 +111,6 @@ typedef struct plcrash_async_objc_cache {
 
 plcrash_error_t plcrash_async_objc_cache_init (plcrash_async_objc_cache_t *context);
 void plcrash_async_objc_cache_free (plcrash_async_objc_cache_t *context);
-    
-bool plcrash_async_objc_supports_nonptr_isa (cpu_type_t type);
 
 /**
  * A callback to invoke when an Objective-C method is found.
@@ -123,7 +125,7 @@ typedef void (*plcrash_async_objc_found_method_cb)(bool isClassMethod, plcrash_a
 
 plcrash_error_t plcrash_async_objc_find_method (plcrash_async_macho_t *image, plcrash_async_objc_cache_t *cache, pl_vm_address_t imp, plcrash_async_objc_found_method_cb callback, void *ctx);
     
-/**
+/*
  * @}
  */
 

@@ -29,10 +29,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#import "CrashReporter/CrashReporter.h"
+#import "CrashReporter.h"
 
 #import "PLCrashReportTextFormatter.h"
 #import "PLCrashCompatConstants.h"
+#import "PLCrashAsync.h"
 
 @interface PLCrashReportTextFormatter (PrivateAPI)
 static NSInteger binaryImageSort(id binary1, id binary2, void *context);
@@ -75,6 +76,9 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
             break;
         case PLCrashReportOperatingSystemiPhoneSimulator:
             osName = @"Mac OS X";
+            break;
+        case PLCrashReportOperatingSystemAppleTVOS:
+            osName = @"Apple tvOS";
             break;
         default:
             osName = [NSString stringWithFormat: @"Unknown (%d)", report.systemInfo.operatingSystem];
@@ -178,9 +182,8 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
             hardwareModel = report.machineInfo.modelName;
 
         NSString *incidentIdentifier = @"???";
-        if (report.uuidRef != NULL) {
-            incidentIdentifier = (NSString *) CFUUIDCreateString(NULL, report.uuidRef);
-            [incidentIdentifier autorelease];
+        if (report.uuidRef != nil) {
+            incidentIdentifier = (__bridge_transfer NSString *) CFUUIDCreateString(nil, report.uuidRef);
         }
     
         [text appendFormat: @"Incident Identifier: %@\n", incidentIdentifier];
@@ -346,7 +349,15 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
     
     /* Images. The iPhone crash report format sorts these in ascending order, by the base address */
     [text appendString: @"Binary Images:\n"];
+    uint64_t lastImageBaseAddress = 0;
     for (PLCrashReportBinaryImageInfo *imageInfo in [report.images sortedArrayUsingFunction: binaryImageSort context: nil]) {
+        /* Remove duplicates */
+        uint64_t imageBaseAddress = [imageInfo imageBaseAddress];
+        if (lastImageBaseAddress == imageBaseAddress) {
+            continue;
+        }
+        lastImageBaseAddress = imageBaseAddress;
+
         NSString *uuid;
         /* Fetch the UUID if it exists */
         if (imageInfo.hasImageUUID)
@@ -360,7 +371,7 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
             switch (imageInfo.codeType.type) {
                 case CPU_TYPE_ARM:
                     /* Apple includes subtype for ARM binaries. */
-                    switch (imageInfo.codeType.subtype) {
+                    switch (imageInfo.codeType.subtype & ~CPU_SUBTYPE_MASK) {
                         case CPU_SUBTYPE_ARM_V6:
                             archName = @"armv6";
                             break;
@@ -381,13 +392,17 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
                     
                 case CPU_TYPE_ARM64:
                     /* Apple includes subtype for ARM64 binaries. */
-                    switch (imageInfo.codeType.subtype) {
-                        case CPU_SUBTYPE_ARM_ALL:
+                    switch (imageInfo.codeType.subtype & ~CPU_SUBTYPE_MASK) {
+                        case CPU_SUBTYPE_ARM64_ALL:
                             archName = @"arm64";
                             break;
 
-                        case CPU_SUBTYPE_ARM_V8:
+                        case CPU_SUBTYPE_ARM64_V8:
                             archName = @"armv8";
+                            break;
+
+                        case CPU_SUBTYPE_ARM64E:
+                            archName = @"arm64e";
                             break;
 
                         default:
@@ -489,12 +504,14 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
     uint64_t pcOffset = 0x0;
     NSString *imageName = @"\?\?\?";
     NSString *symbolString = nil;
-    
-    PLCrashReportBinaryImageInfo *imageInfo = [report imageForAddress: frameInfo.instructionPointer];
+
+    PLCrashReportBinaryImageInfo *imageInfo = [report imageForAddress:frameInfo.instructionPointer];
     if (imageInfo != nil) {
         imageName = [imageInfo.imageName lastPathComponent];
         baseAddress = imageInfo.imageBaseAddress;
         pcOffset = frameInfo.instructionPointer - imageInfo.imageBaseAddress;
+    } else if (frameInfo.instructionPointer) {
+        PLCR_LOG("Cannot find image for 0x%" PRIx64, frameInfo.instructionPointer);
     }
 
     /* If symbol info is available, the format used in Apple's reports is Sym + OffsetFromSym. Otherwise,
@@ -502,18 +519,18 @@ static NSInteger binaryImageSort(id binary1, id binary2, void *context);
     if (frameInfo.symbolInfo != nil) {
         NSString *symbolName = frameInfo.symbolInfo.symbolName;
 
-        /* Apple strips the _ symbol prefix in their reports. Only OS X makes use of an
-         * underscore symbol prefix by default. */
+        /* Apple strips the _ symbol prefix in their reports. */
         if ([symbolName rangeOfString: @"_"].location == 0 && [symbolName length] > 1) {
             switch (report.systemInfo.operatingSystem) {
                 case PLCrashReportOperatingSystemMacOSX:
                 case PLCrashReportOperatingSystemiPhoneOS:
+                case PLCrashReportOperatingSystemAppleTVOS:
                 case PLCrashReportOperatingSystemiPhoneSimulator:
                     symbolName = [symbolName substringFromIndex: 1];
                     break;
 
                 default:
-                    NSLog(@"Symbol prefix rules are unknown for this OS!");
+                    PLCR_LOG("Symbol \"%s\" prefix rules are unknown for this OS!", [symbolName UTF8String]);
                     break;
             }
         }

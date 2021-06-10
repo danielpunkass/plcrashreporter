@@ -34,14 +34,6 @@
 #include <mach/machine.h>
 
 /*
- * With the introduction of new processor types and subtypes, Apple often does not update the system headers
- * on Mac OS X (and the Simulator). This header provides compatibility defines (and #warnings that will
- * fire when the SDKs are updated to include the required constants.
- */
-#define PLCF_COMPAT_HAS_UPDATED_OSX_SDK(sdk_version) (TARGET_OS_MAC && !TARGET_OS_IPHONE) && ((PLCF_MIN_MACOSX_SDK > sdk_version) || (MAC_OS_X_VERSION_MAX_ALLOWED <= sdk_version))
-
-
-/*
  * ARM64 compact unwind constants; Since these values are fixed by the ABI, we can safely include them directly here.
  *
  * These are not defined on OS X, and they are defined as enums on iOS, preventing a stable #ifdef check. As such,
@@ -49,7 +41,7 @@
  * ensure this doesn't break inclusion of the header in which the enum identifiers may be defined, we explicitly
  * include the compact unwind header.
  */
-#if TARGET_OS_MAC && !TARGET_OS_IPHONE
+#if TARGET_OS_MAC && !TARGET_OS_IPHONE || TARGET_OS_MACCATALYST
 #include <mach-o/compact_unwind_encoding.h>
 #define UNWIND_ARM64_MODE_MASK                  0x0F000000
 #define UNWIND_ARM64_MODE_FRAMELESS             0x02000000
@@ -62,28 +54,27 @@
 #define UNWIND_ARM64_FRAME_X27_X28_PAIR         0x00000010
 #define UNWIND_ARM64_FRAMELESS_STACK_SIZE_MASK  0x00FFF000
 #define UNWIND_ARM64_DWARF_SECTION_OFFSET       0x00FFFFFF
-#elif PLCF_COMPAT_HAS_UPDATED_OSX_SDK(MAC_OS_X_VERSION_10_8)
-# warning UNWIND_ARM64_* constants are now defined by the minimum supported Mac SDK. Please remove this define.
 #endif
 
-/* CPU type/subtype constants */
-#ifndef CPU_SUBTYPE_ARM_V7S
-# define CPU_SUBTYPE_ARM_V7S 11
-#elif PLCF_COMPAT_HAS_UPDATED_OSX_SDK(MAC_OS_X_VERSION_10_8)
-# warning CPU_SUBTYPE_ARM_V7S is now defined by the minimum supported Mac SDK. Please remove this define.
+/*
+ * OSAtomic* and OSSpinLock are deprecated since macOS 10.12, iOS 10.0 and tvOS 10.0, but suggested replacement
+ * for OSSpinLock is missed at runtime on older versions, so we must use it until we support older versions.
+ */
+#if __MAC_OS_X_VERSION_MIN_REQUIRED >= __MAC_10_12 || \
+    __IPHONE_OS_VERSION_MIN_REQUIRED >= __IPHONE_10_0 || \
+    __TV_OS_VERSION_MIN_REQUIRED >= __TVOS_10_0 || \
+    __WATCH_OS_VERSION_MIN_REQUIRED >= __WATCHOS_3_0
+#include <os/lock.h>
+#define PLCR_COMPAT_LOCK_TYPE           os_unfair_lock
+#define PLCR_COMPAT_LOCK_INIT           OS_UNFAIR_LOCK_INIT
+#define PLCR_COMPAT_LOCK_LOCK(lock)     os_unfair_lock_lock(lock)
+#define PLCR_COMPAT_LOCK_UNLOCK(lock)   os_unfair_lock_unlock(lock)
+#else
+#include <libkern/OSAtomic.h>
+#define PLCR_COMPAT_LOCK_TYPE           OSSpinLock
+#define PLCR_COMPAT_LOCK_INIT           OS_SPINLOCK_INIT
+#define PLCR_COMPAT_LOCK_LOCK(lock)     OSSpinLockLock(lock)
+#define PLCR_COMPAT_LOCK_UNLOCK(lock)   OSSpinLockUnlock(lock)
 #endif
-
-#ifndef CPU_TYPE_ARM64
-# define CPU_TYPE_ARM64 (CPU_TYPE_ARM | CPU_ARCH_ABI64)
-#elif PLCF_COMPAT_HAS_UPDATED_OSX_SDK(MAC_OS_X_VERSION_10_8)
-# warning CPU_TYPE_ARM64 is now defined by the minimum supported Mac SDK. Please remove this define.
-#endif
-
-#ifndef CPU_SUBTYPE_ARM_V8
-# define CPU_SUBTYPE_ARM_V8 13
-#elif PLCF_COMPAT_HAS_UPDATED_OSX_SDK(MAC_OS_X_VERSION_10_8)
-# warning CPU_SUBTYPE_ARM_V8 is now defined by the minimum supported Mac SDK. Please remove this define.
-#endif
-
 
 #endif /* PLCRASH_COMPAT_CONSTANTS_H */

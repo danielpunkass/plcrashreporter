@@ -227,11 +227,11 @@ plcrash_error_t dwarf_cfa_state<machine_ptr, machine_ptr_s>::eval_program (plcra
                 break;
                 
             case DW_CFA_def_cfa:
-                set_cfa_register(dw_expr_read_uleb128_regnum(), dw_expr_read_uleb128());
+                set_cfa_register(dw_expr_read_uleb128_regnum(), (machine_ptr)dw_expr_read_uleb128());
                 break;
                 
             case DW_CFA_def_cfa_sf:
-                set_cfa_register_signed(dw_expr_read_uleb128_regnum(), dw_expr_read_sleb128() * cie_info->data_alignment_factor);
+                set_cfa_register_signed(dw_expr_read_uleb128_regnum(), (machine_ptr_s)(dw_expr_read_sleb128() * cie_info->data_alignment_factor));
                 break;
                 
             case DW_CFA_def_cfa_register: {
@@ -260,7 +260,7 @@ plcrash_error_t dwarf_cfa_state<machine_ptr, machine_ptr_s>::eval_program (plcra
                     case DWARF_CFA_STATE_CFA_TYPE_REGISTER:
                     case DWARF_CFA_STATE_CFA_TYPE_REGISTER_SIGNED:
                         /* Our new offset is unsigned, so all register rules are converted to unsigned here */
-                        set_cfa_register(rule.register_number(), dw_expr_read_uleb128());
+                        set_cfa_register(rule.register_number(), (machine_ptr)dw_expr_read_uleb128());
                         break;
                         
                     case DWARF_CFA_STATE_CFA_TYPE_EXPRESSION:
@@ -278,7 +278,7 @@ plcrash_error_t dwarf_cfa_state<machine_ptr, machine_ptr_s>::eval_program (plcra
                     case DWARF_CFA_STATE_CFA_TYPE_REGISTER:
                     case DWARF_CFA_STATE_CFA_TYPE_REGISTER_SIGNED:
                         /* Our new offset is signed, so all register rules are converted to signed here */
-                        set_cfa_register_signed(rule.register_number(), dw_expr_read_sleb128() * cie_info->data_alignment_factor);
+                        set_cfa_register_signed(rule.register_number(), (machine_ptr_s)(dw_expr_read_sleb128() * cie_info->data_alignment_factor));
                         break;
 
                     case DWARF_CFA_STATE_CFA_TYPE_EXPRESSION:
@@ -324,10 +324,10 @@ plcrash_error_t dwarf_cfa_state<machine_ptr, machine_ptr_s>::eval_program (plcra
                 }
 
                 /* Save the position */
-                set_cfa_expression(abs_addr, blockLength);
+                set_cfa_expression(abs_addr, (pl_vm_size_t) blockLength);
                 
                 /* Skip the expression opcodes */
-                opstream.skip(blockLength);
+                opstream.skip((pl_vm_off_t) blockLength);
                 break;
             }
                 
@@ -340,27 +340,27 @@ plcrash_error_t dwarf_cfa_state<machine_ptr, machine_ptr_s>::eval_program (plcra
                 break;
                 
             case DW_CFA_offset:
-                dw_expr_set_register(const_operand, PLCRASH_DWARF_CFA_REG_RULE_OFFSET, dw_expr_read_uleb128() * cie_info->data_alignment_factor);
+                dw_expr_set_register(const_operand, PLCRASH_DWARF_CFA_REG_RULE_OFFSET, (machine_ptr)(dw_expr_read_uleb128() * cie_info->data_alignment_factor));
                 break;
                 
             case DW_CFA_offset_extended:
-                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_OFFSET, dw_expr_read_uleb128() * cie_info->data_alignment_factor);
+                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_OFFSET, (machine_ptr)(dw_expr_read_uleb128() * cie_info->data_alignment_factor));
                 break;
                 
             case DW_CFA_offset_extended_sf:
-                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_OFFSET, dw_expr_read_sleb128() * cie_info->data_alignment_factor);
+                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_OFFSET, (machine_ptr)(dw_expr_read_sleb128() * cie_info->data_alignment_factor));
                 break;
                 
             case DW_CFA_val_offset:
-                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_VAL_OFFSET, dw_expr_read_uleb128() * cie_info->data_alignment_factor);
+                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_VAL_OFFSET, (machine_ptr)(dw_expr_read_uleb128() * cie_info->data_alignment_factor));
                 break;
                 
             case DW_CFA_val_offset_sf:
-                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_VAL_OFFSET, dw_expr_read_sleb128() * cie_info->data_alignment_factor);
+                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_VAL_OFFSET, (machine_ptr)(dw_expr_read_sleb128() * cie_info->data_alignment_factor));
                 break;
                 
             case DW_CFA_register:
-                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_REGISTER, dw_expr_read_uleb128());
+                dw_expr_set_register(dw_expr_read_uleb128_regnum(), PLCRASH_DWARF_CFA_REG_RULE_REGISTER, (machine_ptr)dw_expr_read_uleb128());
                 break;
             
             case DW_CFA_expression:
@@ -396,7 +396,7 @@ plcrash_error_t dwarf_cfa_state<machine_ptr, machine_ptr_s>::eval_program (plcra
                 }
 
                 /* Skip the expression opcodes */
-                opstream.skip(blockLength);
+                opstream.skip((pl_vm_off_t) blockLength);
                 break;
             }
                 
@@ -511,7 +511,7 @@ plcrash_error_t dwarf_cfa_state<machine_ptr, machine_ptr_s>::apply_state (task_t
             }
 
             /* Fetch the current value, apply the offset, and save as the new thread's CFA. */
-            cfa_val = plcrash_async_thread_state_get_reg(thread_state, regnum);
+            cfa_val = (machine_ptr) plcrash_async_thread_state_get_reg(thread_state, regnum);
             if (cfa_rule.type() == DWARF_CFA_STATE_CFA_TYPE_REGISTER)
                 cfa_val += cfa_rule.register_offset();
             else
@@ -530,7 +530,10 @@ plcrash_error_t dwarf_cfa_state<machine_ptr, machine_ptr_s>::apply_state (task_t
                 PLCF_DEBUG("CFA eval_64 failed");
                 return err;
             }
-            
+
+            /* Clean up the memory mapping */
+            plcrash_async_mobject_free(&mobj);
+
             break;
         }
     }
@@ -634,7 +637,7 @@ static plcrash_error_t plcrash_async_dwarf_cfa_state_apply_register (task_t task
     /* Apply the rule */
     switch (dw_rule) {
         case PLCRASH_DWARF_CFA_REG_RULE_OFFSET: {
-            if ((err = plcrash_async_task_memcpy(task, cfa_val, (machine_ptr_s)dw_value, vptr, greg_size)) != PLCRASH_ESUCCESS) {
+            if ((err = plcrash_async_task_memcpy(task, (pl_vm_address_t) cfa_val, (pl_vm_off_t) dw_value, vptr, greg_size)) != PLCRASH_ESUCCESS) {
                 PLCF_DEBUG("Failed to read offset(N) register value: %d", err);
                 return err;
             }
@@ -688,7 +691,7 @@ static plcrash_error_t plcrash_async_dwarf_cfa_state_apply_register (task_t task
             
             /* Map the expression data  */
             plcrash_async_mobject_t mobj;
-            if ((err = plcrash_async_mobject_init(&mobj, task, expr_addr, expr_len, true)) != PLCRASH_ESUCCESS) {
+            if ((err = plcrash_async_mobject_init(&mobj, task, expr_addr, (pl_vm_size_t) expr_len, true)) != PLCRASH_ESUCCESS) {
                 PLCF_DEBUG("Could not map CFA expression range");
                 return err;
             }
@@ -697,7 +700,7 @@ static plcrash_error_t plcrash_async_dwarf_cfa_state_apply_register (task_t task
             plcrash_greg_t regval;
             if (m64) {
                 uint64_t initial_state[] = { cfa_val };
-                if ((err = plcrash_async_dwarf_expression_eval<uint64_t, int64_t>(&mobj, task, thread_state, byteorder, expr_addr, 0, expr_len, initial_state, 1, &rvalue.v64)) != PLCRASH_ESUCCESS) {
+                if ((err = plcrash_async_dwarf_expression_eval<uint64_t, int64_t>(&mobj, task, thread_state, byteorder, expr_addr, 0, (pl_vm_size_t) expr_len, initial_state, 1, &rvalue.v64)) != PLCRASH_ESUCCESS) {
                     plcrash_async_mobject_free(&mobj);
                     PLCF_DEBUG("CFA eval_64 failed");
                     return err;
@@ -706,7 +709,7 @@ static plcrash_error_t plcrash_async_dwarf_cfa_state_apply_register (task_t task
                 regval = rvalue.v64;
             } else {
                 uint32_t initial_state[] = { static_cast<uint32_t>(cfa_val) };
-                if ((err = plcrash_async_dwarf_expression_eval<uint32_t, int32_t>(&mobj, task, thread_state, byteorder, expr_addr, 0, expr_len, initial_state, 1, &rvalue.v32)) != PLCRASH_ESUCCESS) {
+                if ((err = plcrash_async_dwarf_expression_eval<uint32_t, int32_t>(&mobj, task, thread_state, byteorder, expr_addr, 0, (pl_vm_size_t) expr_len, initial_state, 1, &rvalue.v32)) != PLCRASH_ESUCCESS) {
                     plcrash_async_mobject_free(&mobj);
                     PLCF_DEBUG("CFA eval_32 failed");
                     return err;
@@ -720,7 +723,7 @@ static plcrash_error_t plcrash_async_dwarf_cfa_state_apply_register (task_t task
             
             /* Dereference the target address, if using the non-value EXPRESSION rule */
             if (dw_rule == PLCRASH_DWARF_CFA_REG_RULE_EXPRESSION) {
-                if ((err = plcrash_async_task_memcpy(task, regval, 0, vptr, greg_size)) != PLCRASH_ESUCCESS) {
+                if ((err = plcrash_async_task_memcpy(task, (pl_vm_address_t) regval, 0, vptr, greg_size)) != PLCRASH_ESUCCESS) {
                     PLCF_DEBUG("Failed to read register value from expression result: %d", err);
                     return err;
                 }
@@ -759,7 +762,7 @@ static plcrash_error_t plcrash_async_dwarf_cfa_state_apply_register (task_t task
 template class plcrash::async::dwarf_cfa_state<uint32_t, int32_t>;
 template class plcrash::async::dwarf_cfa_state<uint64_t, int64_t>;
 
-/**
+/*
  * @}
  */
 

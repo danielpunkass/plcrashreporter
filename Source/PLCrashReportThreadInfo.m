@@ -26,7 +26,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if __has_include(<CrashReporter/PLCrashReportThreadInfo.h>)
+#import <CrashReporter/PLCrashReportThreadInfo.h>
+#else
 #import "PLCrashReportThreadInfo.h"
+#endif
 
 /**
  * Crash log per-thread state information.
@@ -47,17 +51,11 @@
         return nil;
 
     _threadNumber = threadNumber;
-    _stackFrames = [stackFrames retain];
+    _stackFrames = stackFrames;
     _crashed = crashed;
-    _registers = [registers retain];
+    _registers = registers;
 
     return self;
-}
-
-- (void) dealloc {
-    [_stackFrames release];
-    [_registers release];
-    [super dealloc];
 }
 
 @synthesize threadNumber = _threadNumber;

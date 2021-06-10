@@ -28,7 +28,7 @@
 #define PLCRASH_ASYNC_DWARF_PRIVATE_H 1
 
 #include "PLCrashAsync.h"
-#include "PLCrashAsyncDynamicLoader.h"
+#include "PLCrashAsyncImageList.h"
 #include "PLCrashAsyncThread.h"
 
 #include "PLCrashFeatureConfig.h"
@@ -38,7 +38,8 @@
 
 #if PLCRASH_FEATURE_UNWIND_DWARF
 
-PLCR_CPP_BEGIN_ASYNC_NS
+PLCR_CPP_BEGIN_NS
+namespace async {
 
 /**
  * @internal
@@ -392,7 +393,7 @@ plcrash_error_t plcrash_async_dwarf_read_uintmax64 (plcrash_async_mobject_t *mob
             break;
             
         case 8:
-            *dest = byteorder->swap64(data->u64);
+            *dest = (T)byteorder->swap64(data->u64);
             break;
             
         default:
@@ -456,7 +457,7 @@ plcrash_error_t plcrash_async_dwarf_read_task_uintmax64 (task_t task,
         case 8:
             if ((err = plcrash_async_task_read_uint64(task, byteorder, base_addr, offset, &data.u64)) != PLCRASH_ESUCCESS)
                 return err;
-            *dest = data.u64;
+            *dest = (T)data.u64;
             break;
             
         default:
@@ -467,9 +468,10 @@ plcrash_error_t plcrash_async_dwarf_read_task_uintmax64 (task_t task,
     return PLCRASH_ESUCCESS;
 }
 
-PLCR_CPP_END_ASYNC_NS
+PLCR_CPP_END_NS
+}
 
-/**
+/*
  * @}
  */
 

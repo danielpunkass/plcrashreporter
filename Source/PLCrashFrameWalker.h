@@ -39,7 +39,7 @@
 #include <mach/mach.h>
 
 #include "PLCrashAsyncThread.h"
-#include "PLCrashAsyncDynamicLoader.h"
+#include "PLCrashAsyncImageList.h"
 
 /* Configure supported targets based on the host build architecture. There's currently
  * no deployed architecture on which simultaneous support for different processor families
@@ -174,7 +174,7 @@ plframe_error_t plframe_cursor_next_with_readers (plframe_cursor_t *cursor, plfr
 
 void plframe_cursor_free(plframe_cursor_t *cursor);
 
-/**
+/*
  * @} plcrash_framewalker
  */
     

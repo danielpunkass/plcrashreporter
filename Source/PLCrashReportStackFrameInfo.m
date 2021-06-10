@@ -26,7 +26,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if __has_include(<CrashReporter/PLCrashReportStackFrameInfo.h>)
+#import <CrashReporter/PLCrashReportStackFrameInfo.h>
+#else
 #import "PLCrashReportStackFrameInfo.h"
+#endif
 
 /**
  * Crash log stack frame information.
@@ -47,15 +51,8 @@
         return nil;
     
     _instructionPointer = instructionPointer;
-    _symbolInfo = [symbolInfo retain];
-    
+    _symbolInfo = symbolInfo;
     return self;
-}
-
-- (void) dealloc {
-    [_symbolInfo release];
-
-    [super dealloc];
 }
 
 @end

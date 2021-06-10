@@ -59,41 +59,49 @@ plframe_error_t plframe_cursor_read_compact_unwind (task_t task,
         return PLFRAME_EBADFRAME;
     }
     plcrash_greg_t pc = plcrash_async_thread_state_get_reg(&current_frame->thread_state, PLCRASH_REG_IP);
+    if (pc == 0) {
+        return PLFRAME_ENOTSUP;
+    }
     
     /* Find the corresponding image */
-    plcrash_async_macho_t *image = plcrash_async_image_containing_address(image_list, pc);
+    plcrash_async_image_list_set_reading(image_list, true);
+    plcrash_async_image_t *image = plcrash_async_image_containing_address(image_list, (pl_vm_address_t) pc);
     if (image == NULL) {
         PLCF_DEBUG("Could not find a loaded image for the current frame pc: 0x%" PRIx64, (uint64_t) pc);
-        return PLFRAME_ENOTSUP;
+        result = PLFRAME_ENOTSUP;
+        goto cleanup;
     }
     
     /* Map the unwind section */
     plcrash_async_mobject_t unwind_mobj;
-    err = plcrash_async_macho_map_section(image, SEG_TEXT, "__unwind_info", &unwind_mobj);
+    err = plcrash_async_macho_map_section(&image->macho_image, SEG_TEXT, "__unwind_info", &unwind_mobj);
     if (err != PLCRASH_ESUCCESS) {
         if (err != PLCRASH_ENOTFOUND)
-            PLCF_DEBUG("Could not map the compact unwind info section for image %s: %d", image->name, err);
-        return PLFRAME_ENOTSUP;
+            PLCF_DEBUG("Could not map the compact unwind info section for image %s: %d", image->macho_image.name, err);
+        result = PLFRAME_ENOTSUP;
+        goto cleanup;
     }
 
     /* Initialize the CFE reader. */
-    cpu_type_t cputype = image->byteorder->swap32(image->header.cputype);
+    cpu_type_t cputype = image->macho_image.byteorder->swap32(image->macho_image.header.cputype);
     plcrash_async_cfe_reader_t reader;
 
     err = plcrash_async_cfe_reader_init(&reader, &unwind_mobj, cputype);
     if (err != PLCRASH_ESUCCESS) {
-        PLCF_DEBUG("Could not parse the compact unwind info section for image '%s': %d", image->name, err);
-        return PLFRAME_EINVAL;
+        PLCF_DEBUG("Could not parse the compact unwind info section for image '%s': %d", image->macho_image.name, err);
+        result = PLFRAME_EINVAL;
+        goto cleanup_mobject;
     }
 
     /* Find the encoding entry (if any) and free the reader */
     pl_vm_address_t function_base;
     uint32_t encoding;
-    err = plcrash_async_cfe_reader_find_pc(&reader, pc - image->header_addr, &function_base, &encoding);
+    err = plcrash_async_cfe_reader_find_pc(&reader, (pl_vm_address_t)(pc - image->macho_image.header_addr), &function_base, &encoding);
     plcrash_async_cfe_reader_free(&reader);
     if (err != PLCRASH_ESUCCESS) {
         PLCF_DEBUG("Did not find CFE entry for PC 0x%" PRIx64 ": %d", (uint64_t) pc, err);
-        return PLFRAME_ENOTSUP;
+        result = PLFRAME_ENOTSUP;
+        goto cleanup_mobject;
     }
     
     /* Decode the entry */
@@ -101,24 +109,23 @@ plframe_error_t plframe_cursor_read_compact_unwind (task_t task,
     err = plcrash_async_cfe_entry_init(&entry, cputype, encoding);
     if (err != PLCRASH_ESUCCESS) {
         PLCF_DEBUG("Could not decode CFE encoding 0x%" PRIx32 " for PC 0x%" PRIx64 ": %d", encoding, (uint64_t) pc, err);
-        return PLFRAME_ENOTSUP;
+        result = PLFRAME_ENOTSUP;
+        goto cleanup_mobject;
     }
 
     /* Skip entries for which no unwind information is unavailable */
     if (plcrash_async_cfe_entry_type(&entry) == PLCRASH_ASYNC_CFE_ENTRY_TYPE_NONE) {
-
-        plcrash_async_cfe_entry_free(&entry);
-        return PLFRAME_ENOFRAME;
+        result = PLFRAME_ENOFRAME;
+        goto cleanup_cfe_entry;
     }
     
     /* Compute the in-core function address */
     pl_vm_address_t function_address;
-    if (!plcrash_async_address_apply_offset(image->header_addr, function_base, &function_address)) {
+    if (!plcrash_async_address_apply_offset(image->macho_image.header_addr, function_base, &function_address)) {
         PLCF_DEBUG("The provided function base (0x%" PRIx64 ") plus header address (0x%" PRIx64 ") will overflow pl_vm_address_t",
-                   (uint64_t) function_base, (uint64_t) image->header_addr);
-
-        plcrash_async_cfe_entry_free(&entry);
-        return PLFRAME_EINVAL;
+                   (uint64_t) function_base, (uint64_t) image->macho_image.header_addr);
+        result = PLFRAME_EINVAL;
+        goto cleanup_cfe_entry;
     }
 
     /* Apply the frame delta -- this may fail. */
@@ -129,7 +136,12 @@ plframe_error_t plframe_cursor_read_compact_unwind (task_t task,
         result = PLFRAME_ENOFRAME;
     }
 
+cleanup_cfe_entry:
     plcrash_async_cfe_entry_free(&entry);
+cleanup_mobject:
+    plcrash_async_mobject_free(&unwind_mobj);
+cleanup:
+    plcrash_async_image_list_set_reading(image_list, false);
     return result;
 }
 

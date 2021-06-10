@@ -38,7 +38,8 @@
 
 using namespace plcrash::async;
 
-PLCR_CPP_BEGIN_ASYNC_NS
+PLCR_CPP_BEGIN_NS
+namespace async {
 
 /**
  * @internal
@@ -152,7 +153,7 @@ plcrash_error_t plcrash_async_dwarf_expression_eval (plcrash_async_mobject_t *mo
 })
 
     /* A push macro that handles reporting of stack overflow errors */
-#define dw_expr_push(v) if (!stack.push(v)) { \
+#define dw_expr_push(v) if (!stack.push((machine_ptr_s)v)) { \
     PLCF_DEBUG("Hit stack limit; cannot push further values"); \
     return PLCRASH_EINTERNAL; \
 }
@@ -349,7 +350,7 @@ plcrash_error_t plcrash_async_dwarf_expression_eval (plcrash_async_mobject_t *mo
                 machine_ptr value;
 
                 dw_expr_pop(&addr);
-                if ((err = plcrash_async_task_memcpy(task, addr, 0, &value, sizeof(value))) != PLCRASH_ESUCCESS) {
+                if ((err = plcrash_async_task_memcpy(task, (pl_vm_address_t) addr, 0, &value, sizeof(value))) != PLCRASH_ESUCCESS) {
                     PLCF_DEBUG("DW_OP_deref referenced an invalid target address 0x%" PRIx64, (uint64_t) addr);
                     return err;
                 }
@@ -393,7 +394,7 @@ plcrash_error_t plcrash_async_dwarf_expression_eval (plcrash_async_mobject_t *mo
                         PLCF_DEBUG("DW_OP_deref_size referenced an invalid target address 0x%" PRIx64, (uint64_t) addr); \
                         return err; \
                     } \
-                    value = r; \
+                    value = (machine_ptr)r; \
                     break; \
                 }
                 machine_ptr value = 0;
@@ -725,10 +726,11 @@ template plcrash_error_t plcrash_async_dwarf_expression_eval<uint64_t, int64_t> 
                                                                                  uint64_t initial_state[],
                                                                                  size_t initial_count,
                                                                                  uint64_t *result);
-/**
+/*
  * @}
  */
     
-PLCR_CPP_END_ASYNC_NS
+}
+PLCR_CPP_END_NS
 
 #endif /* PLCRASH_FEATURE_UNWIND_DWARF */

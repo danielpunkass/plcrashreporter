@@ -26,6 +26,7 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#import "PLCrashMacros.h"
 #import "PLCrashHostInfo.h"
 #import "PLCrashSysctl.h"
 #import "PLCrashAsync.h"
@@ -51,7 +52,7 @@
  * fetching the host info, nil will be returned.
  */
 + (instancetype) currentHostInfo {
-    return [[[self alloc] init] autorelease];
+    return [[self alloc] init];
 }
 
 /*
@@ -83,7 +84,7 @@ static BOOL parse_osrelease (NSString *osrelease, PLCrashHostInfoVersion *versio
     return YES;
 
 error:
-    NSLog(@"Unexpected kern.osrelease string format: %@", osrelease);
+    PLCR_LOG("Unexpected kern.osrelease string format: %s", [osrelease UTF8String]);
     return NO;
 }
 
@@ -99,11 +100,10 @@ error:
     char *val = plcrash_sysctl_string("kern.osrelease");
     if (val == NULL) {
         /* This should never fail; if it does, either malloc failed, or 'kern.osrelease' disappeared. */
-        NSLog(@"Failed to fetch kern.osrelease value %d: %s", errno, strerror(errno));
-        [self release];
+        PLCR_LOG("Failed to fetch kern.osrelease value %d: %s", errno, strerror(errno));
         return nil;
     }
-    NSString *osrelease = [[[NSString alloc] initWithBytesNoCopy: val length: strlen(val) encoding: NSUTF8StringEncoding freeWhenDone: YES] autorelease];
+    NSString *osrelease = [[NSString alloc] initWithBytesNoCopy: val length: strlen(val) encoding: NSUTF8StringEncoding freeWhenDone: YES];
 
     /* Since this is best-effort, we ignore parse failures; unparseable elements will be defaulted to '0' */
     parse_osrelease(osrelease, &_darwinVersion);
@@ -112,6 +112,6 @@ error:
 
 @end
 
-/**
+/*
  * @}
  */

@@ -30,6 +30,7 @@
 #define PLCRASH_CONSTANTS_H
 
 #include <assert.h>
+#include <TargetConditionals.h>
 
 #if defined(__cplusplus)
 #   define PLCR_EXPORT extern "C"
@@ -42,7 +43,10 @@
 #endif
 
 #if defined(__cplusplus)
-#  if defined(PLCRASHREPORTER_PREFIX)
+#  define NO_OTHER_MACRO_STARTS_WITH_THIS_NAME_
+#  define IS_EMPTY_(name) defined(NO_OTHER_MACRO_STARTS_WITH_THIS_NAME_ ## name)
+#  define IS_EMPTY(name) IS_EMPTY_(name)
+#  if defined(PLCRASHREPORTER_PREFIX) && !IS_EMPTY(PLCRASHREPORTER_PREFIX)
      /** @internal Define the plcrash namespace, automatically inserting an inline namespace containing the configured PLCRASHREPORTER_PREFIX, if any. */
 #    define PLCR_CPP_BEGIN_NS namespace plcrash { inline namespace PLCRASHREPORTER_PREFIX {
 
@@ -52,12 +56,6 @@
 #   define PLCR_CPP_BEGIN_NS namespace plcrash {
 #   define PLCR_CPP_END_NS }
 #  endif
-#
-    /** @internal Define the plcrash::async namespace, automatically inserting an inline namespace containing the configured PLCRASHREPORTER_PREFIX, if any. */
-#  define PLCR_CPP_BEGIN_ASYNC_NS PLCR_CPP_BEGIN_NS namespace async {
-
-    /** @internal Close the definition of the `plcrash::async` namespace (and the PLCRASHREPORTER_PREFIX inline namespace, if any). */
-#  define PLCR_CPP_END_ASYNC_NS PLCR_CPP_END_NS }
 #endif
 
 #ifdef __clang__
@@ -140,6 +138,16 @@
 #    define PLCR_ASSERT_STATIC_(name, cond, line) PLCR_ASSERT_STATIC__(name, cond, line)
 #    define PLCR_ASSERT_STATIC__(name, cond, line) typedef int plcf_static_assert_##name##_##line [(cond) ? 1 : -1] PLCR_UNUSED
 #  endif
+#endif /* PLCR_PRIVATE */
+
+#ifdef PLCR_PRIVATE
+#  if TARGET_OS_MACCATALYST
+#    include <os/log.h>
+#    define PLCR_LOG(msg, args...) os_log(OS_LOG_DEFAULT, "[PLCrashReporter] "  msg, ## args)
+#  else
+#    include <asl.h>
+#    define PLCR_LOG(msg, args...) asl_log(NULL, NULL, ASL_LEVEL_INFO, "[PLCrashReporter] " msg, ## args)
+#  endif /* TARGET_OS_MACCATALYST */
 #endif /* PLCR_PRIVATE */
 
 #endif /* PLCRASH_CONSTANTS_H */

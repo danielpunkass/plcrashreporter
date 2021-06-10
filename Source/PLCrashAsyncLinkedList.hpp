@@ -31,9 +31,13 @@
 
 #include "PLCrashAsync.h"
 #include "PLCrashMacros.h"
-#include <libkern/OSAtomic.h>
+#include "PLCrashCompatConstants.h"
+#include <atomic>
 
-PLCR_CPP_BEGIN_ASYNC_NS
+PLCR_CPP_BEGIN_NS
+
+namespace async {
+    
     
 /**
  * @internal
@@ -78,6 +82,7 @@ public:
         }
 
     private:
+        
         /**
          * Construct a new node with @a value.
          *
@@ -107,7 +112,7 @@ public:
         node *_prev;
         
         /** The next image in the list, or NULL. */
-        node *_next;
+        std::atomic<node *> _next;
     };
 
     async_list (void);
@@ -150,29 +155,29 @@ private:
     void free_list (node *next);
 
     /** The lock used by writers. No lock is required for readers. */
-    OSSpinLock _write_lock;
+    PLCR_COMPAT_LOCK_TYPE _write_lock;
     
     /** The head of the list, or NULL if the list is empty. Must only be used to iterate or delete entries. */
-    node *_head;
+    std::atomic<node *> _head;
     
     /** The tail of the list, or NULL if the list is empty. Must only be used to append new entries. */
     node *_tail;
     
     /** The list reference count. No nodes will be deallocated while the count is greater than 0. If the count
      * reaches 0, all nodes in the free list will be deallocated. */
-    int32_t _refcount;
+    std::atomic_int32_t _refcount;
     
     /** The node free list. */
     node *_free;
 };
-    
+
 /** Construct a new, empty linked list */
 template <typename V> async_list<V>::async_list (void) {
     _head = NULL;
     _tail = NULL;
     _free = NULL;
     _refcount = 0;
-    _write_lock = OS_SPINLOCK_INIT;
+    _write_lock = PLCR_COMPAT_LOCK_INIT;
 }
     
 template <typename V> async_list<V>::~async_list (void) {
@@ -193,7 +198,7 @@ template <typename V> async_list<V>::~async_list (void) {
  */
 template <typename V> void async_list<V>::nasync_prepend (V value) {
     /* Lock the list from other writers. */
-    OSSpinLockLock(&_write_lock); {
+    PLCR_COMPAT_LOCK_LOCK(&_write_lock); {
         /* Construct the new entry, or recycle an existing one. */
         node *new_node;
         if (_free != NULL) {
@@ -208,7 +213,7 @@ template <typename V> void async_list<V>::nasync_prepend (V value) {
         }
         
         /* Issue a memory barrier to ensure a consistent view of the value. */
-        OSMemoryBarrier();
+        std::atomic_thread_fence(std::memory_order_seq_cst);
         
         /* If this is the first entry, initialize the list. */
         if (_tail == NULL) {
@@ -217,7 +222,8 @@ template <typename V> void async_list<V>::nasync_prepend (V value) {
             _tail = new_node;
             
             /* Atomically update the list head; this will be iterated upon by lockless readers. */
-            if (!OSAtomicCompareAndSwapPtrBarrier(NULL, new_node, (void **) (&_head))) {
+            node *expected = NULL;
+            if (!_head.compare_exchange_strong(expected, new_node)) {
                 /* Should never occur */
                 PLCF_DEBUG("An async image head was set with tail == NULL despite holding lock.");
             }
@@ -225,22 +231,23 @@ template <typename V> void async_list<V>::nasync_prepend (V value) {
         
         /* Otherwise, prepend to the head of the list */
         else {
-            new_node->_next = _head;
+            new_node->_next = (node *)_head;
             new_node->_prev = NULL;
             
             /* Update the prev pointers. This is never accessed without a lock, so no additional synchronization
              * is required here. */
-            _head->_prev = new_node;
+            ((node *)_head)->_prev = new_node;
 
             /* Issue a memory barrier to ensure a consistent view of the nodes. */
-            OSMemoryBarrier();
+            std::atomic_thread_fence(std::memory_order_seq_cst);
 
             /* Atomically slot the new record into place; this may be iterated on by a lockless reader. */
-            if (!OSAtomicCompareAndSwapPtrBarrier(new_node->_next, new_node, (void **) (&_head))) {
+            node *expected = new_node->_next;
+            if (!_head.compare_exchange_strong(expected, new_node)) {
                 PLCF_DEBUG("Failed to prepend to image list despite holding lock");
             }
         }
-    } OSSpinLockUnlock(&_write_lock);
+    } PLCR_COMPAT_LOCK_UNLOCK(&_write_lock);
 }
 
 
@@ -254,7 +261,7 @@ template <typename V> void async_list<V>::nasync_prepend (V value) {
 template <typename V> void async_list<V>::nasync_append (V value) {
     
     /* Lock the list from other writers. */
-    OSSpinLockLock(&_write_lock); {
+    PLCR_COMPAT_LOCK_LOCK(&_write_lock); {
         /* Construct the new entry, or recycle an existing one. */
         node *new_node;
         if (_free != NULL) {
@@ -269,7 +276,7 @@ template <typename V> void async_list<V>::nasync_append (V value) {
         }
         
         /* Issue a memory barrier to ensure a consistent view of the value. */
-        OSMemoryBarrier();
+        std::atomic_thread_fence(std::memory_order_seq_cst);
         
         /* If this is the first entry, initialize the list. */
         if (_tail == NULL) {
@@ -278,7 +285,8 @@ template <typename V> void async_list<V>::nasync_append (V value) {
             _tail = new_node;
             
             /* Atomically update the list head; this will be iterated upon by lockless readers. */
-            if (!OSAtomicCompareAndSwapPtrBarrier(NULL, new_node, (void **) (&_head))) {
+            node *expected = NULL;
+            if (!_head.compare_exchange_strong(expected, new_node)) {
                 /* Should never occur */
                 PLCF_DEBUG("An async image head was set with tail == NULL despite holding lock.");
             }
@@ -287,7 +295,8 @@ template <typename V> void async_list<V>::nasync_append (V value) {
         /* Otherwise, append to the end of the list */
         else {
             /* Atomically slot the new record into place; this may be iterated on by a lockless reader. */
-            if (!OSAtomicCompareAndSwapPtrBarrier(NULL, new_node, (void **) (&_tail->_next))) {
+            node *expected = NULL;
+            if (!_tail->_next.compare_exchange_strong(expected, new_node)) {
                 PLCF_DEBUG("Failed to append to image list despite holding lock");
             }
             
@@ -296,7 +305,7 @@ template <typename V> void async_list<V>::nasync_append (V value) {
             new_node->_prev = _tail;
             _tail = new_node;
         }
-    } OSSpinLockUnlock(&_write_lock);
+    } PLCR_COMPAT_LOCK_UNLOCK(&_write_lock);
 }
 
 /**
@@ -328,7 +337,7 @@ template <typename V> void async_list<V>::nasync_remove_first_value (V value) {
  */
 template <typename V> void async_list<V>::nasync_remove_node (node *deleted_node) {
     /* Lock the list from other writers. */
-    OSSpinLockLock(&_write_lock); {
+    PLCR_COMPAT_LOCK_LOCK(&_write_lock); {
         /* Find the record. */
         node *item = _head;
         while (item != NULL) {
@@ -340,7 +349,7 @@ template <typename V> void async_list<V>::nasync_remove_node (node *deleted_node
         
         /* If not found, nothing to do */
         if (item == NULL) {
-            OSSpinLockUnlock(&_write_lock);
+            PLCR_COMPAT_LOCK_UNLOCK(&_write_lock);
             return;
         }
         
@@ -350,12 +359,12 @@ template <typename V> void async_list<V>::nasync_remove_node (node *deleted_node
          * This serves as a synchronization point -- after the CAS, the item is no longer reachable via the list.
          */
         if (item == _head) {
-            if (!OSAtomicCompareAndSwapPtrBarrier(item, item->_next, (void **) &_head)) {
+            if (!_head.compare_exchange_strong(item, item->_next)) {
                 PLCF_DEBUG("Failed to remove image list head despite holding lock");
             }
         } else {
             /* There MUST be a non-NULL prev pointer, as this is not HEAD. */
-            if (!OSAtomicCompareAndSwapPtrBarrier(item, item->_next, (void **) &item->_prev->_next)) {
+            if (!item->_prev->_next.compare_exchange_strong(item, item->_next)) {
                 PLCF_DEBUG("Failed to remove image list item despite holding lock");
             }
         }
@@ -364,7 +373,7 @@ template <typename V> void async_list<V>::nasync_remove_node (node *deleted_node
          * and need not be updated atomically. */
         if (item->_next != NULL) {
             /* Item is not the tail (otherwise next would be NULL), so simply update the next item's prev pointer. */
-            item->_next->_prev = item->_prev;
+            ((node *)item->_next)->_prev = item->_prev;
         } else {
             /* Item is the tail (next is NULL). Simply update the tail record. */
             _tail = item->_prev;
@@ -383,7 +392,7 @@ template <typename V> void async_list<V>::nasync_remove_node (node *deleted_node
         } else {
             delete item;
         }
-    } OSSpinLockUnlock(&_write_lock);
+    } PLCR_COMPAT_LOCK_UNLOCK(&_write_lock);
 }
 
 /**
@@ -396,10 +405,10 @@ template <typename V> void async_list<V>::nasync_remove_node (node *deleted_node
 template <typename V> void async_list<V>::set_reading (bool enable) {
     if (enable) {
         /* Increment and issue a barrier. Once issued, no items will be deallocated while a reference is held. */
-        OSAtomicIncrement32Barrier(&_refcount);
+        _refcount++;
     } else {
         /* Increment and issue a barrier. Once issued, items may again be deallocated. */
-        OSAtomicDecrement32Barrier(&_refcount);
+        _refcount--;
     }
 }
 
@@ -440,6 +449,7 @@ template <typename V> void async_list<V>::free_list (node *next) {
     }
 }
 
-PLCR_CPP_END_ASYNC_NS
+PLCR_CPP_END_NS
+}
 
 #endif /* PLCRASH_ASYNC_LINKED_LIST_H */

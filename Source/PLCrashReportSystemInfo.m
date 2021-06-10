@@ -26,8 +26,13 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if __has_include(<CrashReporter/PLCrashReportSystemInfo.h>)
+#import <CrashReporter/PLCrashReportSystemInfo.h>
+#import <CrashReporter/PLCrashReportProcessorInfo.h>
+#else
 #import "PLCrashReportSystemInfo.h"
 #import "PLCrashReportProcessorInfo.h"
+#endif
 
 /**
  * @ingroup constants
@@ -35,9 +40,12 @@
  * The current host's operating system.
  */
 PLCrashReportOperatingSystem PLCrashReportHostOperatingSystem =
+// FIXME: Deprecated, use TARGET_OS_SIMULATOR
 #if TARGET_IPHONE_SIMULATOR
     PLCrashReportOperatingSystemiPhoneSimulator;
-#elif TARGET_OS_IPHONE
+#elif TARGET_OS_TV
+    PLCrashReportOperatingSystemAppleTVOS;
+#elif TARGET_OS_IPHONE && !TARGET_OS_MACCATALYST
     PLCrashReportOperatingSystemiPhoneOS;
 #elif TARGET_OS_MAC
     PLCrashReportOperatingSystemMacOSX;
@@ -144,21 +152,13 @@ PLCrashReportArchitecture PLCrashReportHostArchitecture =
         return nil;
     
     _operatingSystem = operatingSystem;
-    _osVersion = [operatingSystemVersion retain];
-    _osBuild = [operatingSystemBuild retain];
+    _osVersion = operatingSystemVersion;
+    _osBuild = operatingSystemBuild;
     _architecture = architecture;
-    _processorInfo = [processorInfo retain];
-    _timestamp = [timestamp retain];
+    _processorInfo = processorInfo;
+    _timestamp = timestamp;
     
     return self;
-}
-
-- (void) dealloc {
-    [_osVersion release];
-    [_osBuild release];
-    [_timestamp release];
-    [_processorInfo release];
-    [super dealloc];
 }
 
 @synthesize operatingSystem = _operatingSystem;

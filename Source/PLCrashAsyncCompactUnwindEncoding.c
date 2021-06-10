@@ -249,7 +249,7 @@ plcrash_error_t plcrash_async_cfe_reader_find_pc (plcrash_async_cfe_reader_t *re
                 return PLCRASH_EINVAL;
             }
             
-            if (!plcrash_async_mobject_verify_local_pointer(reader->mobj, header, entries_offset, entries_count * sizeof(struct unwind_info_regular_second_level_entry))) {
+            if (!plcrash_async_mobject_verify_local_pointer(reader->mobj, (uintptr_t)header, entries_offset, entries_count * sizeof(struct unwind_info_regular_second_level_entry))) {
                 PLCF_DEBUG("CFE entries table lies outside the mapped CFE range");
                 return PLCRASH_EINVAL;
             }
@@ -292,7 +292,7 @@ plcrash_error_t plcrash_async_cfe_reader_find_pc (plcrash_async_cfe_reader_t *re
                 return PLCRASH_EINVAL;
             }
             
-            if (!plcrash_async_mobject_verify_local_pointer(reader->mobj, header, entries_offset, entries_count * sizeof(uint32_t))) {
+            if (!plcrash_async_mobject_verify_local_pointer(reader->mobj, (uintptr_t)header, entries_offset, entries_count * sizeof(uint32_t))) {
                 PLCF_DEBUG("CFE entries table lies outside the mapped CFE range");
                 return PLCRASH_EINVAL;
             }
@@ -334,7 +334,7 @@ plcrash_error_t plcrash_async_cfe_reader_find_pc (plcrash_async_cfe_reader_t *re
                 return PLCRASH_EINVAL;
             }
 
-            if (!plcrash_async_mobject_verify_local_pointer(reader->mobj, header, encodings_offset, encodings_count * sizeof(uint32_t))) {
+            if (!plcrash_async_mobject_verify_local_pointer(reader->mobj, (uintptr_t)header, encodings_offset, encodings_count * sizeof(uint32_t))) {
                 PLCF_DEBUG("CFE compressed encodings table lies outside the mapped CFE range");
                 return PLCRASH_EINVAL;
             }
@@ -359,8 +359,11 @@ plcrash_error_t plcrash_async_cfe_reader_find_pc (plcrash_async_cfe_reader_t *re
     }
 
     // Unreachable
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
     __builtin_trap();
     return PLCRASH_ENOTFOUND;
+#pragma clang diagnostic pop
 }
 
 /**
@@ -769,9 +772,11 @@ plcrash_error_t plcrash_async_cfe_entry_init (plcrash_async_cfe_entry_t *entry, 
         }
         
         // Unreachable
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
         __builtin_trap();
         return PLCRASH_EINTERNAL;
-
+#pragma clang diagnostic pop
     } else if (cpu_type == CPU_TYPE_X86_64) {
         uint32_t mode = encoding & UNWIND_X86_64_MODE_MASK;
         switch (mode) {
@@ -865,8 +870,11 @@ plcrash_error_t plcrash_async_cfe_entry_init (plcrash_async_cfe_entry_t *entry, 
         }
         
         // Unreachable
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wunreachable-code"
         __builtin_trap();
         return PLCRASH_EINTERNAL;
+#pragma clang diagnostic pop
     } else if (cpu_type == CPU_TYPE_ARM64) {
         uint32_t mode = encoding & UNWIND_ARM64_MODE_MASK;
         switch (mode) {
@@ -991,7 +999,7 @@ uint32_t plcrash_async_cfe_entry_stack_adjustment (plcrash_async_cfe_entry_t *en
  * - PLCRASH_ASYNC_CFE_ENTRY_TYPE_FRAMELESS_INDIRECT
  */
 plcrash_regnum_t plcrash_async_cfe_entry_return_address_register (plcrash_async_cfe_entry_t *entry) {
-    PLCF_ASSERT(entry->return_address_register == PLCRASH_REG_INVALID || (entry->type == PLCRASH_ASYNC_CFE_ENTRY_TYPE_FRAMELESS_IMMD || entry->type == PLCRASH_ASYNC_CFE_ENTRY_TYPE_FRAMELESS_INDIRECT));
+    PLCF_ASSERT(entry->return_address_register == PLCRASH_REG_INVALID || entry->type == PLCRASH_ASYNC_CFE_ENTRY_TYPE_FRAMELESS_IMMD || entry->type == PLCRASH_ASYNC_CFE_ENTRY_TYPE_FRAMELESS_INDIRECT);
     return entry->return_address_register;
 }
 
@@ -1075,12 +1083,12 @@ plcrash_error_t plcrash_async_cfe_entry_apply (task_t task,
             plcrash_greg_t fp = plcrash_async_thread_state_get_reg(thread_state, PLCRASH_REG_FP);
             
             /* Address of saved registers */
-            saved_reg_addr = fp + entry->stack_offset;
+            saved_reg_addr = (pl_vm_address_t)(fp + entry->stack_offset);
             
             /* Restore the previous frame's stack pointer from the saved frame pointer. This is
              * the FP + saved FP + return address. */
             pl_vm_address_t new_sp;
-            if (!plcrash_async_address_apply_offset(fp, greg_size * 2, &new_sp)) {
+            if (!plcrash_async_address_apply_offset((pl_vm_address_t) fp, greg_size * 2, &new_sp)) {
                 PLCF_DEBUG("Current frame pointer falls outside of addressable bounds");
                 return PLCRASH_EINVAL;
             }
@@ -1141,7 +1149,7 @@ plcrash_error_t plcrash_async_cfe_entry_apply (task_t task,
 
             if (entry->return_address_register == PLCRASH_REG_INVALID) {
                 /* Return address is on the stack */
-                pl_vm_address_t retaddr = sp - greg_size;
+                pl_vm_address_t retaddr = (pl_vm_address_t)(sp - greg_size);
                 saved_reg_addr = retaddr - (greg_size * entry->register_count); /* retaddr - [saved registers] */
 
                 /* Original SP is found just before the return address. */
@@ -1170,7 +1178,7 @@ plcrash_error_t plcrash_async_cfe_entry_apply (task_t task,
                 plcrash_async_thread_state_set_reg(new_thread_state, PLCRASH_REG_IP, plcrash_async_thread_state_get_reg(thread_state, entry->return_address_register));
                 
                 /* Saved registers are found below the new stack pointer. */
-                saved_reg_addr = sp - (greg_size * entry->register_count); /* sp - [saved registers] */
+                saved_reg_addr = (pl_vm_address_t) sp - (greg_size * entry->register_count); /* sp - [saved registers] */
             }
 
             break;
@@ -1219,7 +1227,7 @@ void plcrash_async_cfe_entry_free (plcrash_async_cfe_entry_t *entry) {
     // noop
 }
 
-/**
+/*
  * @} plcrash_async_cfe
  */
 

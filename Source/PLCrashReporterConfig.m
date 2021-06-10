@@ -26,7 +26,11 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#if __has_include(<CrashReporter/PLCrashReporterConfig.h>)
+#import <CrashReporter/PLCrashReporterConfig.h>
+#else
 #import "PLCrashReporterConfig.h"
+#endif
 
 /**
  * Crash Reporter Configuration.
@@ -37,12 +41,13 @@
 
 @synthesize signalHandlerType = _signalHandlerType;
 @synthesize symbolicationStrategy = _symbolicationStrategy;
+@synthesize shouldRegisterUncaughtExceptionHandler = _shouldRegisterUncaughtExceptionHandler;
 
 /**
  * Return the default local configuration.
  */
 + (instancetype) defaultConfiguration {
-    return [[[self alloc] init] autorelease];
+    return [[self alloc] init];
 }
 
 /**
@@ -54,6 +59,17 @@
 }
 
 /**
+ * Initialize a new PLCrashReporterConfig instance using the default configuration and custom crash data save path. The default configuration
+ * is appropriate for use in release builds.
+ *
+ * @param basePath The base path to save the crash data
+ */
+- (instancetype) initWithBasePath: (NSString *) basePath
+{
+    return [self initWithSignalHandlerType: PLCrashReporterSignalHandlerTypeBSD symbolicationStrategy: PLCrashReporterSymbolicationStrategyNone basePath: basePath];
+}
+
+/**
  * Initialize a new PLCrashReporterConfig instance.
  *
  * @param signalHandlerType The requested signal handler type.
@@ -62,13 +78,59 @@
 - (instancetype) initWithSignalHandlerType: (PLCrashReporterSignalHandlerType) signalHandlerType
                      symbolicationStrategy: (PLCrashReporterSymbolicationStrategy) symbolicationStrategy
 {
-    if ((self = [super init]) == nil)
-        return nil;
+  return [self initWithSignalHandlerType: signalHandlerType symbolicationStrategy: symbolicationStrategy shouldRegisterUncaughtExceptionHandler: YES];
+}
 
-    _signalHandlerType = signalHandlerType;
-    _symbolicationStrategy = symbolicationStrategy;
+/**
+ * Initialize a new PLCrashReporterConfig instance.
+ *
+ * @param signalHandlerType The requested signal handler type.
+ * @param symbolicationStrategy A local symbolication strategy.
+ * @param basePath The base path to save the crash data.
+ */
+- (instancetype) initWithSignalHandlerType: (PLCrashReporterSignalHandlerType) signalHandlerType
+                     symbolicationStrategy: (PLCrashReporterSymbolicationStrategy) symbolicationStrategy
+                                  basePath: (NSString *) basePath
+{
+  return [self initWithSignalHandlerType: signalHandlerType symbolicationStrategy: symbolicationStrategy shouldRegisterUncaughtExceptionHandler: YES basePath: basePath];
+}
 
-    return self;
+/**
+ * Initialize a new PLCrashReporterConfig instance.
+ *
+ * @param signalHandlerType The requested signal handler type.
+ * @param symbolicationStrategy A local symbolication strategy.
+ * @param shouldRegisterUncaughtExceptionHandler Flag indicating if an uncaught exception handler should be set.
+ */
+- (instancetype) initWithSignalHandlerType: (PLCrashReporterSignalHandlerType) signalHandlerType
+                     symbolicationStrategy: (PLCrashReporterSymbolicationStrategy) symbolicationStrategy
+    shouldRegisterUncaughtExceptionHandler: (BOOL) shouldRegisterUncaughtExceptionHandler
+{
+  return [self initWithSignalHandlerType: signalHandlerType symbolicationStrategy: symbolicationStrategy shouldRegisterUncaughtExceptionHandler: YES basePath: nil];
+}
+
+/**
+ * Initialize a new PLCrashReporterConfig instance.
+ *
+ * @param signalHandlerType The requested signal handler type.
+ * @param symbolicationStrategy A local symbolication strategy.
+ * @param shouldRegisterUncaughtExceptionHandler Flag indicating if an uncaught exception handler should be set.
+ * @param basePath The base path to save the crash data.
+ */
+- (instancetype) initWithSignalHandlerType: (PLCrashReporterSignalHandlerType) signalHandlerType
+                     symbolicationStrategy: (PLCrashReporterSymbolicationStrategy) symbolicationStrategy
+    shouldRegisterUncaughtExceptionHandler: (BOOL) shouldRegisterUncaughtExceptionHandler
+                                  basePath: (NSString *) basePath
+{
+  if ((self = [super init]) == nil)
+    return nil;
+  
+  _signalHandlerType = signalHandlerType;
+  _symbolicationStrategy = symbolicationStrategy;
+  _shouldRegisterUncaughtExceptionHandler = shouldRegisterUncaughtExceptionHandler;
+  _basePath = basePath;
+  
+  return self;
 }
 
 @end

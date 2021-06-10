@@ -42,7 +42,7 @@ extern "C" {
 #include <TargetConditionals.h>
 #include <mach/mach.h>
 
-#if TARGET_OS_IPHONE
+#if TARGET_OS_IPHONE && !TARGET_OS_MACCATALYST
 
 /*
  * iOS does not provide the mach_vm_* APIs, and as such, we can't support both
@@ -141,7 +141,7 @@ typedef int64_t pl_vm_off_t;
 
 #define PLCF_DEBUG(msg, args...) {\
     char __tmp_output[128];\
-    snprintf(__tmp_output, sizeof(__tmp_output), "[PLCrashReport] "); \
+    snprintf(__tmp_output, sizeof(__tmp_output), "[PLCrashReporter] "); \
     plcrash_async_writen(STDERR_FILENO, __tmp_output, strlen(__tmp_output));\
     \
     snprintf(__tmp_output, sizeof(__tmp_output), ":%d: ", __LINE__); \

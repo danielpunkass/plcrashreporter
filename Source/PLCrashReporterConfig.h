@@ -27,7 +27,12 @@
  */
 
 #import <Foundation/Foundation.h>
+
+#if __has_include(<CrashReporter/PLCrashFeatureConfig.h>)
 #import <CrashReporter/PLCrashFeatureConfig.h>
+#else
+#import "PLCrashFeatureConfig.h"
+#endif
 
 /**
  * @ingroup enums
@@ -146,13 +151,38 @@ typedef NS_OPTIONS(NSUInteger, PLCrashReporterSymbolicationStrategy) {
     
     /** The configured symbolication strategy. */
     PLCrashReporterSymbolicationStrategy _symbolicationStrategy;
+  
+   /**
+    * Flag indicating if the uncaughtExceptionHandler should be initialized or not. It usually is, except in a
+    * Xamarin environment.
+    */
+  BOOL _shouldRegisterUncaughtExceptionHandler;
 }
 
 + (instancetype) defaultConfiguration;
 
 - (instancetype) init;
+
+- (instancetype) initWithBasePath: (NSString *) basePath;
+
 - (instancetype) initWithSignalHandlerType: (PLCrashReporterSignalHandlerType) signalHandlerType
                      symbolicationStrategy: (PLCrashReporterSymbolicationStrategy) symbolicationStrategy;
+
+- (instancetype) initWithSignalHandlerType: (PLCrashReporterSignalHandlerType) signalHandlerType
+                     symbolicationStrategy: (PLCrashReporterSymbolicationStrategy) symbolicationStrategy
+                                  basePath: (NSString *) basePath;
+
+- (instancetype) initWithSignalHandlerType: (PLCrashReporterSignalHandlerType) signalHandlerType
+                     symbolicationStrategy: (PLCrashReporterSymbolicationStrategy) symbolicationStrategy
+    shouldRegisterUncaughtExceptionHandler: (BOOL) shouldRegisterUncaughtExceptionHandler;
+
+- (instancetype) initWithSignalHandlerType: (PLCrashReporterSignalHandlerType) signalHandlerType
+                     symbolicationStrategy: (PLCrashReporterSymbolicationStrategy) symbolicationStrategy
+    shouldRegisterUncaughtExceptionHandler: (BOOL) shouldRegisterUncaughtExceptionHandler
+                                  basePath: (NSString *) basePath;
+
+/** The base path to save the crash data. */
+@property(nonatomic, readonly) NSString *basePath;
 
 /** The configured signal handler type. */
 @property(nonatomic, readonly) PLCrashReporterSignalHandlerType signalHandlerType;
@@ -160,6 +190,8 @@ typedef NS_OPTIONS(NSUInteger, PLCrashReporterSymbolicationStrategy) {
 /** The configured symbolication strategy. */
 @property(nonatomic, readonly) PLCrashReporterSymbolicationStrategy symbolicationStrategy;
 
+/** Should PLCrashReporter regiser an uncaught exception handler? This is entended to be used in Xamarin apps */
+@property(nonatomic, readonly) BOOL shouldRegisterUncaughtExceptionHandler;
 
 @end
 
