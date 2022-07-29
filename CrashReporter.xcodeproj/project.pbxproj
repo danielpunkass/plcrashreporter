@@ -2590,27 +2590,7 @@
 			productReference = 32CF777F26DFBB080087748A /* CrashReporter.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-<<<<<<< HEAD
-		32CF791A26DFC9C90087748A /* CrashReporter macOS (use for static framework) */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = 32CF799B26DFC9C90087748A /* Build configuration list for PBXNativeTarget "CrashReporter macOS (use for static framework)" */;
-			buildPhases = (
-				32CF791B26DFC9C90087748A /* Headers */,
-				32CF795C26DFC9C90087748A /* Sources */,
-				32CF799926DFC9C90087748A /* Frameworks */,
-			);
-			buildRules = (
-				0F1F99EA2702A9D400A79282 /* PBXBuildRule */,
-			);
-			dependencies = (
-			);
-			name = "CrashReporter macOS (use for static framework)";
-			productName = "CrashReporter-MacOSX-Static";
-			productReference = 32CF799E26DFC9C90087748A /* libCrashReporter.a */;
-			productType = "com.apple.product-type.library.static";
-		};
-=======
->>>>>>> 81cdec2b3827feb03286cb297f4c501a8eb98df1
+	81cdec2b3827feb03286cb297f4c501a8eb98df1
 		8064D7AD1C4D22D8005A8B4C /* CrashReporter tvOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8064D8181C4D22D8005A8B4C /* Build configuration list for PBXNativeTarget "CrashReporter tvOS" */;
@@ -2709,10 +2689,7 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-<<<<<<< HEAD
-=======
 				BuildIndependentTargetsInParallel = YES;
->>>>>>> 81cdec2b3827feb03286cb297f4c501a8eb98df1
 				LastUpgradeCheck = 1340;
 				TargetAttributes = {
 					052A45CE136353FB00987004 = {
