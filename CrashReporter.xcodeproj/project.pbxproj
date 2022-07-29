@@ -2590,7 +2590,6 @@
 			productReference = 32CF777F26DFBB080087748A /* CrashReporter.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-	81cdec2b3827feb03286cb297f4c501a8eb98df1
 		8064D7AD1C4D22D8005A8B4C /* CrashReporter tvOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 8064D8181C4D22D8005A8B4C /* Build configuration list for PBXNativeTarget "CrashReporter tvOS" */;
