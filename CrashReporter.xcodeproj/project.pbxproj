@@ -762,21 +762,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXBuildRule section */
-		0F1F99EA2702A9D400A79282 /* PBXBuildRule */ = {
-			isa = PBXBuildRule;
-			compilerSpec = com.apple.compilers.proxy.script;
-			filePatterns = "*.proto";
-			fileType = pattern.proxy;
-			inputFiles = (
-			);
-			isEditable = 1;
-			outputFiles = (
-				"${INPUT_FILE_DIR}/${INPUT_FILE_BASE}.pb-c.c",
-				"${INPUT_FILE_DIR}/${INPUT_FILE_BASE}.pb-c.h",
-			);
-			runOncePerArchitecture = 0;
-			script = "if type protoc-c > /dev/null; then\n  cd \"${INPUT_FILE_DIR}\" && protoc-c --c_out=. \"${INPUT_FILE_NAME}\"\nfi\n";
-		};
 		C2B72B1A24534DD200D03ABD /* PBXBuildRule */ = {
 			isa = PBXBuildRule;
 			compilerSpec = com.apple.compilers.proxy.script;
@@ -2689,7 +2674,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1340;
+				LastUpgradeCheck = 1400;
 				TargetAttributes = {
 					052A45CE136353FB00987004 = {
 						DevelopmentTeam = 5Z97G9NZQ6;
@@ -4117,6 +4102,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/Dependencies/protobuf-c\"";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LIBTOOLFLAGS = "-no_warning_for_no_symbols";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.${PRODUCT_NAME:identifier}";
@@ -4179,6 +4165,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/Dependencies/protobuf-c\"";
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				OTHER_LIBTOOLFLAGS = "-no_warning_for_no_symbols";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.microsoft.${PRODUCT_NAME:identifier}";
 				PRODUCT_NAME = CrashReporter;
