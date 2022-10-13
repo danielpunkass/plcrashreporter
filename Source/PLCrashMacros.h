@@ -140,9 +140,4 @@
 #  endif
 #endif /* PLCR_PRIVATE */
 
-#ifdef PLCR_PRIVATE
-#    include <os/log.h>
-#    define PLCR_LOG(msg, args...) os_log(OS_LOG_DEFAULT, "[PLCrashReporter] "  msg, ## args)
-#endif /* PLCR_PRIVATE */
-
 #endif /* PLCRASH_CONSTANTS_H */
