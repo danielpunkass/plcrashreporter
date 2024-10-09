@@ -276,7 +276,7 @@ static plcrash_error_t plcr_live_report_callback (plcrash_async_thread_state_t *
     STAssertNotEquals((NSUInteger)0, [crashLog.images count], @"Crash log should contain at least one image");
     for (PLCrashReportBinaryImageInfo *imageInfo in crashLog.images) {
         STAssertNotNil(imageInfo.imageName, @"Image name is nil");
-        if (imageInfo.hasImageUUID == YES) {
+        if (imageInfo.hasImageUUID) {
             STAssertNotNil(imageInfo.imageUUID, @"Image UUID is nil");
             STAssertEquals((NSUInteger)32, [imageInfo.imageUUID length], @"UUID should be 32 characters (16 bytes)");
         } else if (!imageInfo.hasImageUUID) {
