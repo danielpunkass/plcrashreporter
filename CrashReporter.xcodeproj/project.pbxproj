@@ -484,7 +484,6 @@
 		C29AD6DA2456CA6C00360AF7 /* PLCrashLogWriterEncodingTests.proto in Sources */ = {isa = PBXBuildFile; fileRef = 052951EE1696A461006EDA8A /* PLCrashLogWriterEncodingTests.proto */; };
 		C29AD6DB2456CA7300360AF7 /* PLCrashLogWriterEncodingTests.proto in Sources */ = {isa = PBXBuildFile; fileRef = 052951EE1696A461006EDA8A /* PLCrashLogWriterEncodingTests.proto */; };
 		C29AD6DC2456CA7800360AF7 /* PLCrashLogWriterEncodingTests.proto in Sources */ = {isa = PBXBuildFile; fileRef = 052951EE1696A461006EDA8A /* PLCrashLogWriterEncodingTests.proto */; };
-		C2B72B0F2453496F00D03ABD /* PLCrashReport.pb-c.c in Sources */ = {isa = PBXBuildFile; fileRef = C2B72B0D2453496E00D03ABD /* PLCrashReport.pb-c.c */; };
 		C2B72B102453496F00D03ABD /* PLCrashReport.pb-c.c in Sources */ = {isa = PBXBuildFile; fileRef = C2B72B0D2453496E00D03ABD /* PLCrashReport.pb-c.c */; };
 		C2B72B112453496F00D03ABD /* PLCrashReport.pb-c.c in Sources */ = {isa = PBXBuildFile; fileRef = C2B72B0D2453496E00D03ABD /* PLCrashReport.pb-c.c */; };
 		C2B72B122453496F00D03ABD /* PLCrashReport.pb-c.h in Headers */ = {isa = PBXBuildFile; fileRef = C2B72B0E2453496F00D03ABD /* PLCrashReport.pb-c.h */; };
@@ -3422,7 +3421,6 @@
 				05BEC42617BD4F290082CBFB /* PLCrashAsyncMachExceptionInfo.c in Sources */,
 				C2B72B2124534E5200D03ABD /* PLCrashReport.proto in Sources */,
 				05BEC43A17BF1CB10082CBFB /* PLCrashReporterConfig.m in Sources */,
-				C2B72B0F2453496F00D03ABD /* PLCrashReport.pb-c.c in Sources */,
 				05B929EC17C9336600B051E3 /* PLCrashUncaughtExceptionHandler.m in Sources */,
 				0527063017CBCCC200E6A5D8 /* PLCrashProcessInfo.m in Sources */,
 				0513E23817D15ED400727919 /* PLCrashReportMachExceptionInfo.m in Sources */,
