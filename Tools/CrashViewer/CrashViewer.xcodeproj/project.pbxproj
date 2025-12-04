@@ -420,7 +420,7 @@
 			isa = PBXProject;
 			attributes = {
 				CLASSPREFIX = PL;
-				LastUpgradeCheck = 2610;
+				LastUpgradeCheck = 2620;
 				ORGANIZATIONNAME = "Plausible Labs Cooperative, Inc.";
 			};
 			buildConfigurationList = D891CC1118D0C9510048AC0F /* Build configuration list for PBXProject "CrashViewer" */;
