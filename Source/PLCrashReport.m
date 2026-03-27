@@ -386,7 +386,7 @@ error:
 	 * us is the deprecated architecture field. From that we will generate a
 	 * PLCrashReportProcessorInfo object so that library users don't have to
 	 * get at the architecture information multiple ways. */
-	if (processorInfo == nil) {
+    if (processorInfo == nil) {
         processorInfo = [self synthesizeProcessorInfoFromArchitecture: systemInfo->architecture error: outError];
         if (processorInfo == nil)
             return nil;
